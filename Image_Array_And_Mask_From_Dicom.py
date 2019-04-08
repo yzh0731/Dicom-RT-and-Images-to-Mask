@@ -6,7 +6,7 @@ from matplotlib import pyplot
 
 class DicomImagestoData:
     image_size = 512
-    def __init__(self,Contour_Names = ['Liver'],Contour_Key={'Liver':1},path='',
+    def __init__(self,Contour_Names = ['Liver'],path='',
                  pat = 999, images_description= 'Images'):
         self.associations = {}
         for roi in Contour_Names:
@@ -14,7 +14,6 @@ class DicomImagestoData:
                 self.associations[roi.lower()] = roi
         self.images_description = images_description
         self.Contour_Names = Contour_Names
-        self.Contour_Key = Contour_Key
         print('This is running on ' + self.Contour_Names[0] + ' contours')
         self.MRN_list = os.listdir(path)
         self.got_file_list = False
