@@ -1,6 +1,8 @@
 # Dicom_Utilities
 Various utilities created to help with the interpretation of dicom images/RT Structures
 
+RT Structure and dicom conversion to numpy arrays
+
 This code is designed to receive an input path to a folder which contains both dicom images and a single RT structure file
 
 For example, assume a folder exists with dicom files and an RT structure located at 'C:\users\brianmanderson\Patient_1\CT1\' with the roi 'Liver'
