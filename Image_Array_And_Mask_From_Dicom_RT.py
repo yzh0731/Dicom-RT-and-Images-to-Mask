@@ -2,27 +2,11 @@ import dicom, os
 import numpy as np
 from dicom.tag import Tag
 from skimage import draw
-from matplotlib import pyplot
 
 class DicomImagestoData:
-    image_size = 512
-    def __init__(self,Contour_Names = ['Liver'],path='',
-                 pat = 999, images_description= 'Images'):
+    def __init__(self,path=''):
         self.associations = {}
-        for roi in Contour_Names:
-            if roi not in self.associations:
-                self.associations[roi.lower()] = roi
-        self.images_description = images_description
-        self.Contour_Names = Contour_Names
-        print('This is running on ' + self.Contour_Names[0] + ' contours')
-        self.MRN_list = os.listdir(path)
-        self.got_file_list = False
-        self.iteration = 0
-        self.hierarchy = {'Liver':['Liver','Liver_1','Liver_BMA_Program_4']}
-        if pat != 999:
-            self.iteration = pat
-        self.batch_size = 1
-        self.perc_done = 0
+        self.hierarchy = {}
         self.down_folder(path)
 
     def down_folder(self,input_path):
@@ -42,10 +26,56 @@ class DicomImagestoData:
             self.down_folder(new_directory)
         return None
 
+    def get_mask(self, Contour_Names):
+        for roi in Contour_Names:
+            if roi not in self.associations:
+                self.associations[roi] = roi
+        self.Contour_Names = Contour_Names
+
+        # And this is making a mask file
+        self.mask = np.zeros([self.image_size_1, self.image_size_2, len(self.lstFilesDCM), len(self.Contour_Names)],
+                             dtype='float32')
+
+        self.structure_references = {}
+        for contour_number in range(len(self.RS_struct.ROIContourSequence)):
+            self.structure_references[
+                self.RS_struct.ROIContourSequence[contour_number].ReferencedROINumber] = contour_number
+
+        found_rois = {}
+        for roi in self.Contour_Names:
+            found_rois[roi] = {'Hierarchy': 999, 'Name': [], 'Roi_Number': 0}
+        for Structures in self.ROI_Structure:
+            ROI_Name = Structures.ROIName
+            if Structures.ROINumber not in self.structure_references.keys():
+                continue
+            true_name = None
+            if ROI_Name in self.associations:
+                true_name = self.associations[ROI_Name]
+            elif ROI_Name in self.associations:
+                true_name = self.associations[ROI_Name]
+            if true_name and true_name in self.Contour_Names:
+                if true_name in self.hierarchy.keys():
+                    for roi in self.hierarchy[true_name]:
+                        if roi == ROI_Name:
+                            index_val = self.hierarchy[true_name].index(roi)
+                            if index_val < found_rois[true_name]['Hierarchy']:
+                                found_rois[true_name]['Hierarchy'] = index_val
+                                found_rois[true_name]['Name'] = ROI_Name
+                                found_rois[true_name]['Roi_Number'] = Structures.ROINumber
+                else:
+                    found_rois[true_name] = {'Hierarchy': 999, 'Name': ROI_Name, 'Roi_Number': Structures.ROINumber}
+        i = 0
+        for ROI_Name in found_rois.keys():
+            if found_rois[ROI_Name]['Roi_Number'] in self.structure_references:
+                index = self.structure_references[found_rois[ROI_Name]['Roi_Number']]
+                mask = self.get_mask_for_contour(index)
+                self.mask[..., i][mask == 1] = 1
+                i += 1
+        self.mask = np.transpose(self.mask, axes=(2, 0, 1, 3))
+        return None
+
     def Make_Contour_From_directory(self,PathDicom):
         self.prep_data(PathDicom)
-        if not self.mask_exist:
-            return None
         self.all_angles = [0]
         self.get_images_and_mask()
         return None
@@ -82,24 +112,7 @@ class DicomImagestoData:
                 self.ROI_Structure = []
             self.rois_in_case = []
             for Structures in self.ROI_Structure:
-                self.rois_in_case.append(Structures.ROIName.lower())
-            # Make sure we have ALL the contours defined
-            comparing = []
-            for roi in self.rois_in_case:
-                if roi in self.associations and self.associations[roi] in self.Contour_Names:
-                    self.mask_exist = True
-                    comparing.append(self.associations[roi])
-            if not set(self.Contour_Names).issubset(comparing):
-                for roi in self.Contour_Names:
-                    if roi.lower() not in self.rois_in_case:
-                        print(roi)
-                    # self.mask_exist = False #If we have one roi, go forward
-        if not self.mask_exist:
-            return None
-        else:
-            print('Got data!')
-        if len(self.lstFilesDCM) < 10 or not self.mask_exist: # If there are no files, break out
-            return None
+                self.rois_in_case.append(Structures.ROIName)
 
     def get_images_and_mask(self):
         # Working on the RS structure now
@@ -161,46 +174,6 @@ class DicomImagestoData:
             self.SOPClassUID[i] = self.SOPClassUID_temp[index]
             i += 1
 
-        # And this is making a mask file
-        self.mask = np.zeros([self.image_size_1, self.image_size_2, len(self.lstFilesDCM),len(self.Contour_Names)], dtype='float32')
-
-        self.structure_references = {}
-        for contour_number in range(len(self.RS_struct.ROIContourSequence)):
-            self.structure_references[self.RS_struct.ROIContourSequence[contour_number].ReferencedROINumber] = contour_number
-
-        found_rois = {}
-        for roi in self.Contour_Names:
-            found_rois[roi] = {'Hierarchy':999,'Name':[],'Roi_Number':0}
-        for Structures in self.ROI_Structure:
-            ROI_Name = Structures.ROIName
-            if Structures.ROINumber not in self.structure_references.keys():
-                continue
-            true_name = None
-            if ROI_Name in self.associations:
-                true_name = self.associations[ROI_Name]
-            elif ROI_Name.lower() in self.associations:
-                true_name = self.associations[ROI_Name.lower()]
-            if true_name and true_name in self.Contour_Names:
-                if true_name in self.hierarchy.keys():
-                    for roi in self.hierarchy[true_name]:
-                        if roi == ROI_Name:
-                            index_val = self.hierarchy[true_name].index(roi)
-                            if index_val < found_rois[true_name]['Hierarchy']:
-                                found_rois[true_name]['Hierarchy'] = index_val
-                                found_rois[true_name]['Name'] = ROI_Name
-                                found_rois[true_name]['Roi_Number'] = Structures.ROINumber
-                else:
-                    found_rois[true_name] = {'Hierarchy':999,'Name':ROI_Name,'Roi_Number':Structures.ROINumber}
-        i = 0
-        for ROI_Name in found_rois.keys():
-            if found_rois[ROI_Name]['Roi_Number'] in self.structure_references:
-                index = self.structure_references[found_rois[ROI_Name]['Roi_Number']]
-                mask = self.get_mask_for_contour(index)
-                self.mask[...,i][mask == 1] = 1
-                i += 1
-        self.mask = np.transpose(self.mask,axes=(2,0,1,3))
-        return None
-
     def get_mask_for_contour(self,i):
         self.Liver_Locations = self.RS_struct.ROIContourSequence[i].ContourSequence
         self.Liver_Slices = []
@@ -250,4 +223,3 @@ class DicomImagestoData:
 
 if __name__ == '__main__':
     xxx = 1
-
