@@ -16,25 +16,22 @@ You can then call it to return a mask based on contour names called DicomImage.g
 
 You can see the available contour names with
 
-for roi in DicomImage.rois_in_case:
+    for roi in DicomImage.rois_in_case:
 
-    print(roi)
+        print(roi)
     
 
 Example:
 
-from Image_Array_And_Mask_From_Dicom import DicomImagestoData
+    from Image_Array_And_Mask_From_Dicom import DicomImagestoData
 
-Path = 'C:\users\brianmanderson\Patient_1\CT1\'
+    Path = 'C:\users\brianmanderson\Patient_1\CT1\'
 
-Contour_Names = ['Liver']
+    Contour_Names = ['Liver']
 
-DicomImage = DicomImagestoData(path=Path)
+    DicomImage = DicomImagestoData(path=Path)
+    for roi in DicomImage.rois_in_case:
+        print(roi)
+    DicomImage.get_mask(Contour_Names)
 
-DicomImage.get_mask(Contour_Names)
-
-mask = DicomImage.mask
-
-You can see all of the available rois within the 
-
-DicomImage.rois_in_case variable
+    mask = DicomImage.mask
