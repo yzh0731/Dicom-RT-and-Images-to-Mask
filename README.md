@@ -7,22 +7,26 @@ This code is designed to receive an input path to a folder which contains both d
 
 For example, assume a folder exists with dicom files and an RT structure located at 'C:\users\brianmanderson\Patient_1\CT1\' with the roi 'Liver'
 
-The performed action would be Dicom_Image = DicomImagestoData(path='C:\users\brianmanderson\Patient_1\CT1\',Contour_Names=['Liver'])
+The performed action would be Dicom_Image = DicomImagestoData(path='C:\users\brianmanderson\Patient_1\CT1\')
 
 Assume there are 100 images, the generated data will be:
 Dicom_Image.ArrayDicom is the image numpy array in the format [# images, rows, cols]
-Dicom_Image.mask is the mask array with format [# images, rows, cols, contours]
 
-So for the above example the mask will be [100, 512, 512, 1]
+You can then call it to return a mask based on contour names called DicomImage.get_mask(), this takes in a list of Contour Names
 
-If there are two rois ['Liver','Ablation Zone'], the mask will be [100, 512, 512, 2] with the first mask being 'Liver'
+You can see the available contour names with
+for roi in DicomImage.rois_in_case:
+    print(roi)
+    
 
+Example:
 from Image_Array_And_Mask_From_Dicom import DicomImagestoData
 
 Path = 'C:\users\brianmanderson\Patient_1\CT1\'
 Contour_Names = ['Liver']
 
-DicomImage = DicomImagestoData(path=Path,Contour_Names=Contour_Names)
-
-Image_Array = DicomImage.ArrayDicom
+DicomImage = DicomImagestoData(path=Path)
+DicomImage.get_mask(Contour_Names)
 mask = DicomImage.mask
+You can see all of the available rois within the 
+DicomImage.rois_in_case variable
