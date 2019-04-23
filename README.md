@@ -20,13 +20,19 @@ for roi in DicomImage.rois_in_case:
     
 
 Example:
+
 from Image_Array_And_Mask_From_Dicom import DicomImagestoData
 
 Path = 'C:\users\brianmanderson\Patient_1\CT1\'
+
 Contour_Names = ['Liver']
 
 DicomImage = DicomImagestoData(path=Path)
+
 DicomImage.get_mask(Contour_Names)
+
 mask = DicomImage.mask
+
 You can see all of the available rois within the 
+
 DicomImage.rois_in_case variable
