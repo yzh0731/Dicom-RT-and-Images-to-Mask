@@ -15,7 +15,9 @@ Dicom_Image.ArrayDicom is the image numpy array in the format [# images, rows, c
 You can then call it to return a mask based on contour names called DicomImage.get_mask(), this takes in a list of Contour Names
 
 You can see the available contour names with
+
 for roi in DicomImage.rois_in_case:
+
     print(roi)
     
 
