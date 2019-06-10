@@ -1,5 +1,4 @@
 # Dicom_Utilities
-Please consider using the more updated function https://github.com/brianmanderson/Dicom_Images_And_RT_Into_Numpy_Parallel
 
 Various utilities created to help with the interpretation of dicom images/RT Structures
 
