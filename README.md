@@ -1,3 +1,4 @@
+# If you find this code useful, please provide a reference to my github page for others, thank you!
 # Dicom_Utilities
 
 Various utilities created to help with the interpretation of dicom images/RT Structures
